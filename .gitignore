@@ -1,0 +1,6 @@
+# Ignore AppleDouble files
+._*
+.DS_Store
+
+# Ignore Docker build context
+.dockerignore
