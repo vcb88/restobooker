@@ -1,0 +1,157 @@
+body {
+    font-family: 'Rubik', sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    background-color: #ECF0F1; /* Light grey */
+    color: #34495E; /* Dark blue-grey */
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Header/Hero Section */
+.hero {
+    background-color: #3498DB; /* Electric blue */
+    background-image: linear-gradient(135deg, #3498DB 0%, #8E44AD 100%); /* Blue to purple gradient */
+    color: white;
+    text-align: center;
+    padding: 100px 20px;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: -50px;
+    width: 200px;
+    height: 200px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    transform: rotate(45deg);
+}
+.hero::after {
+    content: '';
+    position: absolute;
+    bottom: -70px;
+    right: -70px;
+    width: 250px;
+    height: 250px;
+    background-color: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    transform: rotate(-30deg);
+}
+
+
+.hero h1 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 3.5em;
+    margin-bottom: 20px;
+    line-height: 1.2;
+    position: relative;
+    z-index: 1;
+}
+
+.hero p {
+    font-size: 1.3em;
+    margin-bottom: 40px;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+    z-index: 1;
+}
+
+.btn {
+    display: inline-block;
+    background-color: #F39C12; /* Vibrant orange */
+    color: white;
+    padding: 15px 35px;
+    text-decoration: none;
+    border-radius: 50px; /* Pill-shaped button */
+    font-size: 1.2em;
+    font-weight: 700;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    position: relative;
+    z-index: 1;
+}
+
+.btn:hover {
+    background-color: #E67E22; /* Darker orange on hover */
+    transform: translateY(-5px);
+}
+
+/* Fun Features Section */
+.fun-features {
+    padding: 80px 20px;
+    text-align: center;
+}
+
+.fun-features h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 2.8em;
+    color: #34495E;
+    margin-bottom: 60px;
+    position: relative;
+}
+
+.fun-features h2::after {
+    content: '';
+    display: block;
+    width: 70px;
+    height: 5px;
+    background-color: #F39C12; /* Orange accent */
+    margin: 15px auto 0;
+    border-radius: 3px;
+}
+
+
+.feature-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 40px;
+    margin-top: 40px;
+}
+
+.feature-card {
+    background-color: #FFFFFF;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border-bottom: 5px solid #F39C12; /* Orange border bottom */
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 12px 25px rgba(0,0,0,0.2);
+}
+
+.feature-card h3 {
+    font-family: 'Poppins', sans-serif;
+    color: #3498DB; /* Electric blue for titles */
+    font-size: 1.8em;
+    margin-bottom: 15px;
+}
+
+.feature-card p {
+    color: #555555;
+    font-size: 1.1em;
+    line-height: 1.7;
+}
+
+/* Footer */
+.footer {
+    background-color: #34495E; /* Dark blue-grey */
+    color: white;
+    text-align: center;
+    padding: 40px 20px;
+    margin-top: 80px;
+    font-size: 1em;
+}

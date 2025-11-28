@@ -1,0 +1,123 @@
+body {
+    font-family: 'Lato', sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    background-color: #2C3E50; /* Deep blue-grey background */
+    color: #ECF0F1; /* Light grey text */
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Header/Hero Section */
+.hero {
+    background-color: #34495E; /* Slightly darker blue-grey for hero */
+    text-align: center;
+    padding: 100px 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 3.5em;
+    color: #FFD700; /* Gold accent for heading */
+    margin-bottom: 20px;
+    line-height: 1.2;
+}
+
+.hero p {
+    font-size: 1.4em;
+    color: #BDC3C7;
+    margin-bottom: 40px;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.btn {
+    display: inline-block;
+    background-color: #FFD700; /* Gold accent */
+    color: #2C3E50; /* Dark blue-grey text on button */
+    padding: 18px 40px;
+    text-decoration: none;
+    border-radius: 3px;
+    font-size: 1.3em;
+    font-weight: 700;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.btn:hover {
+    background-color: #FFC700; /* Slightly lighter gold on hover */
+    transform: translateY(-3px);
+}
+
+/* Experience Section */
+.experience {
+    padding: 80px 20px;
+    text-align: center;
+}
+
+.experience h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 3em;
+    color: #FFD700; /* Gold accent */
+    margin-bottom: 60px;
+    position: relative;
+}
+
+.experience h2::after {
+    content: '';
+    display: block;
+    width: 80px;
+    height: 2px;
+    background-color: #FFD700; /* Gold accent */
+    margin: 20px auto 0;
+}
+
+.experience-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 50px;
+    margin-top: 40px;
+}
+
+.experience-item {
+    background-color: #34495E; /* Darker blue-grey */
+    padding: 40px;
+    border-radius: 5px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    transition: transform 0.3s ease;
+}
+
+.experience-item:hover {
+    transform: translateY(-10px);
+}
+
+.experience-item h3 {
+    font-family: 'Playfair Display', serif;
+    color: #FFD700; /* Gold accent for titles */
+    font-size: 1.8em;
+    margin-bottom: 20px;
+}
+
+.experience-item p {
+    color: #BDC3C7;
+    font-size: 1.1em;
+    line-height: 1.8;
+}
+
+/* Footer */
+.footer {
+    background-color: #1F2E3A; /* Even darker blue-grey for footer */
+    color: #BDC3C7;
+    text-align: center;
+    padding: 40px 20px;
+    margin-top: 80px;
+    font-size: 1em;
+}
