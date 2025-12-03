@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  hostess-bot:
+    build: .
+    container_name: iron_business_hostess
+    restart: unless-stopped
+    # Interactive mode is required for the initial Telegram login (phone number input)
+    stdin_open: true
+    tty: true
+    volumes:
+      # Persist Telegram session data
+      - ./data:/app/data
+    environment:
+      # Telegram Auth (Get these from https://my.telegram.org/apps)
+      - TG_API_ID=${TG_API_ID}
+      - TG_API_HASH=${TG_API_HASH}
+      # Save session in the mounted data volume
+      - TG_SESSION_NAME=/app/data/hostess_session
+      
+      # LLM Settings
+      - LLM_API_KEY=${LLM_API_KEY}
+      - LLM_BASE_URL=${LLM_BASE_URL:-https://openrouter.ai/api/v1}
+      - LLM_MODEL=${LLM_MODEL:-x-ai/grok-4.1-fast:free}
+      
+      # Timezone
+      - TIMEZONE=Europe/Moscow

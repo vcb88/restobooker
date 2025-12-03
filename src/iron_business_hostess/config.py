@@ -1,10 +1,11 @@
 import os
 
 class Config:
-    # Telegram API credentials (mock values)
-    API_ID = int(os.getenv("TG_API_ID", "1234567"))  # Replace with your actual API ID
-    API_HASH = os.getenv("TG_API_HASH", "your_api_hash_hash_here")  # Replace with your actual API Hash
-    SESSION_NAME = "iron_business_hostess"
+    # Telegram API credentials
+    # Получите их на https://my.telegram.org/apps
+    API_ID = int(os.getenv("TG_API_ID", "1234567"))
+    API_HASH = os.getenv("TG_API_HASH", "your_api_hash_here")
+    SESSION_NAME = os.getenv("TG_SESSION_NAME", "iron_business_hostess") # Путь к файлу сессии
 
     # Настройки LLM (Поддерживаются OpenRouter, Ollama, LMStudio, OpenAI)
     LLM_API_KEY = os.getenv("LLM_API_KEY", "sk-or-...") 
