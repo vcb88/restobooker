@@ -95,11 +95,11 @@ class Config:
 
 ### Примеры настройки LLM
 
-**OpenRouter:**
+**OpenRouter (Рекомендуется - Grok):**
 ```python
 LLM_API_KEY = "sk-or-..." # Ваш ключ OpenRouter
 LLM_BASE_URL = "https://openrouter.ai/api/v1"
-LLM_MODEL = "meta-llama/llama-3.1-8b-instruct" # Или "openai/gpt-4o-mini"
+LLM_MODEL = "x-ai/grok-4.1-fast:free" # Точное название модели из проекта ailegal
 ```
 
 **Ollama (Локально):**

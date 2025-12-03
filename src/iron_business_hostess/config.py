@@ -6,13 +6,12 @@ class Config:
     API_HASH = os.getenv("TG_API_HASH", "your_api_hash_hash_here")  # Replace with your actual API Hash
     SESSION_NAME = "iron_business_hostess"
 
-    # LLM API credentials
-    # Supports OpenAI, OpenRouter, Ollama, LMStudio, etc.
+    # Настройки LLM (Поддерживаются OpenRouter, Ollama, LMStudio, OpenAI)
     LLM_API_KEY = os.getenv("LLM_API_KEY", "sk-or-...") 
-    LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://openrouter.ai/api/v1") 
-    LLM_MODEL = os.getenv("LLM_MODEL", "openai/gpt-3.5-turbo") # e.g., "meta-llama/llama-3.1-8b-instruct" or "llama3" for Ollama
+    LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://openrouter.ai/api/v1")
+    LLM_MODEL = os.getenv("LLM_MODEL", "x-ai/grok-4.1-fast:free") # Точное название модели из проекта ailegal
 
-    # Timezone for reservations
+    # Часовой пояс для бронирований (GMT+3)
     TIMEZONE = "Europe/Moscow" # GMT+3
 
     # Restaurant capacity
