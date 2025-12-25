@@ -43,7 +43,7 @@ class LLMService:
         "type": "function",
         "function": {
             "name": "book_slot",
-            "description": "Бронирует столик на указанную дату и время для клиента. Возвращает подтверждение бронирования или информацию о том, что слот занят.",
+            "description": "Бронирует столик на указанную дату и время для клиента. Возвращает подтверждение бронирования или информацию о том, что подходящих столиков нет.",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -63,8 +63,33 @@ class LLMService:
                         "type": "string",
                         "description": "Номер телефона клиента для связи.",
                     },
+                    "guests_count": {
+                        "type": "integer",
+                        "description": "Количество гостей (по умолчанию 2).",
+                    },
                 },
                 "required": ["date", "time", "client_name", "phone_number"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "cancel_reservation",
+            "description": "Отменяет существующее бронирование по номеру телефона клиента.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "phone_number": {
+                        "type": "string",
+                        "description": "Номер телефона клиента, чью бронь нужно отменить.",
+                    },
+                    "date": {
+                        "type": "string",
+                        "description": "Опционально: дата отменяемой брони.",
+                    },
+                },
+                "required": ["phone_number"],
             },
         },
     },
@@ -83,7 +108,7 @@ class LLMService:
             return json.dumps({"intent": "other"})
         return json.dumps({"intent": "other"})
 
-    def _check_slot_availability(self, date: str, time: str) -> str:
+    def _check_slot_availability(self, date: str, time: str, guests_count: int = 2) -> str:
         try:
             parsed_date = self._parse_date(date)
             parsed_time = self._parse_time(time)
@@ -94,15 +119,16 @@ class LLMService:
                 datetime.combine(parsed_date.date(), parsed_time.time())
             )
 
-            if self.db.is_slot_available(reservation_datetime):
-                return json.dumps({"status": "available", "datetime": str(reservation_datetime)})
+            table_id = self.db.find_available_table(reservation_datetime, guests_count)
+            if table_id:
+                return json.dumps({"status": "available", "datetime": str(reservation_datetime), "guests_count": guests_count})
             else:
-                alternatives = self.db.get_alternative_slots(reservation_datetime)
+                alternatives = self.db.get_alternative_slots(reservation_datetime, guests_count)
                 return json.dumps({"status": "unavailable", "alternatives": [str(alt) for alt in alternatives]})
         except Exception as e:
             return json.dumps({"status": "error", "message": str(e)})
 
-    def _book_slot(self, date: str, time: str, client_name: str, phone_number: str) -> str:
+    def _book_slot(self, date: str, time: str, client_name: str, phone_number: str, guests_count: int = 2) -> str:
         try:
             parsed_date = self._parse_date(date)
             parsed_time = self._parse_time(time)
@@ -113,10 +139,30 @@ class LLMService:
                 datetime.combine(parsed_date.date(), parsed_time.time())
             )
 
-            if self.db.book_slot(reservation_datetime, client_name, phone_number):
-                return json.dumps({"status": "booked", "datetime": str(reservation_datetime), "client_name": client_name, "phone_number": phone_number})
+            result = self.db.book_slot(reservation_datetime, client_name, phone_number, guests_count)
+            if result:
+                return json.dumps({
+                    "status": "booked", 
+                    "datetime": str(result["datetime"]), 
+                    "client_name": client_name, 
+                    "phone_number": phone_number,
+                    "table_name": result["table_name"],
+                    "zone": result["zone"],
+                    "guests_count": guests_count
+                })
             else:
-                return json.dumps({"status": "error", "message": "Слот уже занят или произошла ошибка при бронировании."})
+                return json.dumps({"status": "error", "message": "К сожалению, подходящих свободных столиков на это время нет."})
+        except Exception as e:
+            return json.dumps({"status": "error", "message": str(e)})
+
+    def _cancel_reservation(self, phone_number: str, date: Optional[str] = None) -> str:
+        try:
+            parsed_date = self._parse_date(date) if date else None
+            success = self.db.cancel_reservation(phone_number, parsed_date)
+            if success:
+                return json.dumps({"status": "cancelled", "phone_number": phone_number})
+            else:
+                return json.dumps({"status": "error", "message": "Бронирование не найдено."})
         except Exception as e:
             return json.dumps({"status": "error", "message": str(e)})
 
@@ -127,58 +173,23 @@ class LLMService:
             Возможные намерения:
             - `greeting`: Если клиент просто здоровается, благодарит или прощается.
             - `booking_intent`: Если клиент хочет забронировать столик.
-            - `other`: Во всех остальных случаях, когда намерение не относится к приветствию или бронированию. В таких случаях отвечай уклончиво, фокусируясь на своих навыках хостесс ресторана "Ромашка" и предлагая помощь в бронировании столика. Например, если спрашивают "Как дела?", ответь: "Дела отлично, я готова помочь забронировать лучшие столики в ресторане Ромашка!". Если спрашивают о погоде, ответь: "Я не владею этой информацией, но с удовольствием помогу забронировать столик в ресторане Ромашка."
+            - `cancel_intent`: Если клиент хочет отменить бронирование.
+            - `other`: Во всех остальных случаях.
             
-            Если намерение `booking_intent`, извлеки следующую информацию: дату, время, имя клиента и номер телефона.
-            Если какая-либо информация для бронирования отсутствует, укажи это.
-            Дата может быть относительной (например, 'сегодня', 'завтра', 'послезавтра') или абсолютной (например, '25 октября', '25.10', '25.10.2025').
-            Время должно быть в формате HH:MM.
-            Номер телефона должен быть полным, включая код страны.
-            Имя клиента - это имя человека, который бронирует столик.
-            
-            Верни информацию в формате JSON.
-            
-            Пример для `booking_intent` (если вся информация есть):
-            {{"intent": "booking_intent", "date": "сегодня", "time": "19:00", "client_name": "Алексей", "phone_number": "+79123456789"}}
-            
-            Пример для `booking_intent` (если не хватает информации):
-            {{"intent": "booking_intent", "date": "завтра", "time": "20:00", "client_name": null, "phone_number": null}}
-            
-            Пример для `greeting`:
-            {{"intent": "greeting"}}
-            
-            Пример для `other`:
-            {{"intent": "other"}}
-
+            Если намерение `booking_intent`, извлеки: дату, время, имя клиента, номер телефона и КОЛИЧЕСТВО ГОСТЕЙ (guests_count, по умолчанию 2).
+            Если намерение `cancel_intent`, извлеки: номер телефона и (опционально) дату.
+...
             Информация о ресторане:
             1. График работы: ежедневно, с 8:00 до 24:00.
-            2. Столики: есть в зале и на веранде.
+            2. Столики: есть в зале и на веранде. Всего 5 столов разной вместимости (от 2 до 8 человек).
             3. Парковка: есть возле ресторана.
-            4. Дополнительные услуги: по выходным во второй половине дня играет живая музыка.
-            5. Меню: большое количество блюд из кухонь разных народов мира, основной акцент на русской домашней кухне.
-            
-            Сообщение клиента: """{text}"""
-            """}},
-            {"role": "user", "content": text}
-        ]
-
-        # First LLM call: determine intent or tool call
-        response = await self.client.chat.completions.create(
-            model=Config.LLM_MODEL, # Use configurable model
-            messages=messages,
-            tools=self.TOOLS,
-            tool_choice="auto",
-            response_format={ "type": "json_object" } # Ensure JSON output for non-tool responses
-        )
-        
-        response_message: ChatCompletionMessage = response.choices[0].message
-        tool_calls: Optional[list[ChatCompletionMessageToolCall]] = response_message.tool_calls
-
+...
         if tool_calls:
             # Step 2: call the tool
             available_functions = {
                 "check_slot_availability": self._check_slot_availability,
                 "book_slot": self._book_slot,
+                "cancel_reservation": self._cancel_reservation,
             }
             
             # Only one tool call is expected for simplicity

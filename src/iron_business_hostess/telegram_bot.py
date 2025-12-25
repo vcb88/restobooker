@@ -14,7 +14,7 @@ logging.basicConfig(format='[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s'
 class TelegramBot:
     def __init__(self):
         self.client = TelegramClient(Config.SESSION_NAME, Config.API_ID, Config.API_HASH)
-        self.db = ReservationDB(Config.TIMEZONE, Config.SLOT_DURATION_MINUTES)
+        self.db = ReservationDB(Config.TIMEZONE, Config.TABLES, Config.SLOT_DURATION_MINUTES)
         self.llm_service = LLMService(Config.LLM_API_KEY, Config.LLM_BASE_URL, self.db)
 
         self.client.on(events.NewMessage)(self.handle_new_message)
@@ -43,11 +43,13 @@ class TelegramBot:
             response = "Здравствуйте! Я хостесс ресторана \"Ромашка\". Могу помочь вам забронировать столик или ответить на вопросы."
         elif intent == "booked":
             response = (
-                f"Отлично, {parsed_data.get('client_name')}! Ваш столик забронирован на "
-                f"{parsed_data.get('datetime')} по московскому времени. "
+                f"Отлично, {parsed_data.get('client_name')}! Ваш столик ({parsed_data.get('table_name')}, {parsed_data.get('zone')}) "
+                f"забронирован на {parsed_data.get('datetime')} для {parsed_data.get('guests_count')} гостей. "
                 f"Номер телефона для связи: {parsed_data.get('phone_number')}. "
                 f"Ждем вас! Хорошего дня!"
             )
+        elif intent == "cancelled":
+            response = f"Бронирование на номер {parsed_data.get('phone_number')} успешно отменено. Надеемся увидеть вас в другой раз!"
         elif intent == "available":
             response = f"Столик на {parsed_data.get('datetime')} свободен. Могу забронировать его для вас?"
         elif intent == "unavailable":

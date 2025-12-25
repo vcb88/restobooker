@@ -1,0 +1,21 @@
+tables:
+  - id: 1
+    name: "Столик у окна"
+    capacity: 2
+    zone: "Зал"
+  - id: 2
+    name: "Столик в центре"
+    capacity: 4
+    zone: "Зал"
+  - id: 3
+    name: "Столик в центре"
+    capacity: 4
+    zone: "Зал"
+  - id: 4
+    name: "Уединенный столик"
+    capacity: 2
+    zone: "Веранда"
+  - id: 5
+    name: "Большой стол"
+    capacity: 8
+    zone: "Веранда"

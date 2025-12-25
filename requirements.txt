@@ -1,3 +1,5 @@
 telethon
-pytz
 openai
+pytz
+python-dotenv
+PyYAML
