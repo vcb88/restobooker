@@ -93,6 +93,35 @@ class LLMService:
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "change_reservation",
+            "description": "Переносит существующее бронирование на новое время/дату по номеру телефона клиента.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "phone_number": {
+                        "type": "string",
+                        "description": "Номер телефона клиента.",
+                    },
+                    "new_date": {
+                        "type": "string",
+                        "description": "Новая дата бронирования.",
+                    },
+                    "new_time": {
+                        "type": "string",
+                        "description": "Новое время бронирования.",
+                    },
+                    "old_date": {
+                        "type": "string",
+                        "description": "Опционально: текущая дата бронирования (для уточнения).",
+                    },
+                },
+                "required": ["phone_number", "new_date", "new_time"],
+            },
+        },
+    },
 ]
 
     def _get_mock_llm_response(self, text: str) -> str:
@@ -166,6 +195,33 @@ class LLMService:
         except Exception as e:
             return json.dumps({"status": "error", "message": str(e)})
 
+    def _change_reservation(self, phone_number: str, new_date: str, new_time: str, old_date: Optional[str] = None) -> str:
+        try:
+            parsed_new_date = self._parse_date(new_date)
+            parsed_new_time = self._parse_time(new_time)
+            parsed_old_date = self._parse_date(old_date) if old_date else None
+            
+            if not parsed_new_date or not parsed_new_time:
+                return json.dumps({"status": "error", "message": "Некорректный формат новой даты или времени."})
+
+            new_dt = pytz.timezone(Config.TIMEZONE).localize(
+                datetime.combine(parsed_new_date.date(), parsed_new_time.time())
+            )
+
+            result = self.db.update_reservation_time(phone_number, parsed_old_date, new_dt)
+            if result:
+                return json.dumps({
+                    "status": "changed", 
+                    "datetime": str(result["datetime"]), 
+                    "phone_number": phone_number,
+                    "table_name": result["table_name"],
+                    "zone": result["zone"]
+                })
+            else:
+                return json.dumps({"status": "error", "message": "Бронирование не найдено или новое время уже занято."})
+        except Exception as e:
+            return json.dumps({"status": "error", "message": str(e)})
+
     async def parse_reservation_request(self, text: str) -> Dict[str, Any]:
         messages = [
             {"role": "system", "content": f"""Ты - хостесс ресторана. Твоя задача - определить намерение клиента и извлечь необходимую информацию.
@@ -174,10 +230,12 @@ class LLMService:
             - `greeting`: Если клиент просто здоровается, благодарит или прощается.
             - `booking_intent`: Если клиент хочет забронировать столик.
             - `cancel_intent`: Если клиент хочет отменить бронирование.
+            - `change_intent`: Если клиент хочет перенести или изменить бронирование на другое время.
             - `other`: Во всех остальных случаях.
             
             Если намерение `booking_intent`, извлеки: дату, время, имя клиента, номер телефона и КОЛИЧЕСТВО ГОСТЕЙ (guests_count, по умолчанию 2).
             Если намерение `cancel_intent`, извлеки: номер телефона и (опционально) дату.
+            Если намерение `change_intent`, извлеки: номер телефона, новую дату (new_date) и новое время (new_time).
 ...
             Информация о ресторане:
             1. График работы: ежедневно, с 8:00 до 24:00.
@@ -190,6 +248,7 @@ class LLMService:
                 "check_slot_availability": self._check_slot_availability,
                 "book_slot": self._book_slot,
                 "cancel_reservation": self._cancel_reservation,
+                "change_reservation": self._change_reservation,
             }
             
             # Only one tool call is expected for simplicity

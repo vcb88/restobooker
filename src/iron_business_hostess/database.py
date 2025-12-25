@@ -123,6 +123,55 @@ class ReservationDB:
         
         return sorted(alternatives)
 
+    def update_reservation_time(self, phone_number: str, old_dt: Optional[datetime], new_dt: datetime) -> Optional[Dict[str, Any]]:
+        """Переносит существующую бронь на новое время"""
+        normalized_new_dt = self._normalize_datetime(new_dt)
+        new_dt_str = normalized_new_dt.isoformat()
+
+        with self._get_connection() as conn:
+            cursor = conn.cursor()
+            
+            # 1. Найти существующую активную бронь
+            if old_dt:
+                old_dt_str = self._normalize_datetime(old_dt).isoformat()
+                cursor.execute(
+                    "SELECT id, guests_count FROM reservations WHERE phone_number = ? AND slot_datetime = ? AND status = 'confirmed'",
+                    (phone_number, old_dt_str)
+                )
+            else:
+                cursor.execute(
+                    "SELECT id, guests_count FROM reservations WHERE phone_number = ? AND status = 'confirmed' ORDER BY slot_datetime DESC LIMIT 1",
+                    (phone_number,)
+                )
+            
+            row = cursor.fetchone()
+            if not row:
+                return None
+            
+            res_id, guests_count = row
+
+            # 2. Проверить доступность нового слота
+            table_id = self.find_available_table(normalized_new_dt, guests_count)
+            if not table_id:
+                return None
+
+            # 3. Обновить бронь
+            cursor.execute(
+                "UPDATE reservations SET slot_datetime = ?, table_id = ?, booked_at = ? WHERE id = ?",
+                (new_dt_str, table_id, datetime.now(self.timezone).isoformat(), res_id)
+            )
+            
+            cursor.execute("SELECT name, zone FROM tables WHERE id = ?", (table_id,))
+            table_info = cursor.fetchone()
+            conn.commit()
+
+            return {
+                "datetime": normalized_new_dt,
+                "table_name": table_info[0],
+                "zone": table_info[1],
+                "guests_count": guests_count
+            }
+
     def cancel_reservation(self, phone_number: str, requested_dt: Optional[datetime] = None) -> bool:
         """Отменяет последнее бронирование по номеру телефона (или конкретное по времени)"""
         with self._get_connection() as conn:

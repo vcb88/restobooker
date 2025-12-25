@@ -50,6 +50,13 @@ class TelegramBot:
             )
         elif intent == "cancelled":
             response = f"Бронирование на номер {parsed_data.get('phone_number')} успешно отменено. Надеемся увидеть вас в другой раз!"
+        elif intent == "changed":
+            response = (
+                f"Ваше бронирование успешно перенесено! "
+                f"Новое время: {parsed_data.get('datetime')}. "
+                f"Столик: {parsed_data.get('table_name')} ({parsed_data.get('zone')}). "
+                f"Ждем вас!"
+            )
         elif intent == "available":
             response = f"Столик на {parsed_data.get('datetime')} свободен. Могу забронировать его для вас?"
         elif intent == "unavailable":
